@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Insight Dashboard</title>
+    <style>
+        /* Base Styles */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f3f4f6; color: #1f2937; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 250px; background: white; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 0; }
+        .logo-area { padding: 0 20px 20px; display: flex; align-items: center; gap: 10px; }
+        .logo-icon { width: 32px; height: 32px; background: #6b46c1; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .logo-text h1 { font-size: 14px; font-weight: bold; }
+        .logo-text p { font-size: 11px; color: #6b7280; }
+        .search-box { padding: 0 20px; margin-bottom: 20px; }
+        .search-box input { width: 100%; padding: 8px 10px; border: none; background: #f3f4f6; border-radius: 6px; font-size: 13px; outline: none; }
+        .nav-menu { list-style: none; padding: 0 10px; }
+        .nav-menu li { padding: 10px 15px; margin-bottom: 5px; border-radius: 6px; font-size: 13px; font-weight: 500; color: #4b5563; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .nav-menu li:hover { background: #f9fafb; }
+        .nav-menu li.active { background: #6b46c1; color: white; }
+        .bottom-menu { padding: 0 10px; }
+        .bottom-menu li { padding: 10px 15px; font-size: 13px; color: #4b5563; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .bottom-menu li.signout { color: #ef4444; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: white; border-bottom: 1px solid #e5e7eb; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .breadcrumb { font-size: 13px; color: #6b7280; }
+        .breadcrumb span { color: #1f2937; font-weight: 600; }
+        .topbar-actions { display: flex; gap: 15px; }
+        .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+        .btn-outline { background: white; border: 1px solid #d1d5db; color: #374151; }
+        .btn-primary { background: #6b46c1; color: white; }
+        
+        /* Dashboard Area */
+        .dashboard-scroll { flex: 1; overflow-y: auto; padding: 30px; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; }
+        .page-header h2 { font-size: 24px; font-weight: 700; color: #111827; }
+        .page-header p { font-size: 13px; color: #6b7280; margin-top: 4px; }
+        
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
+        .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .card-header { display: flex; justify-content: space-between; color: #4b5563; font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+        .card-value { font-size: 24px; font-weight: bold; color: #111827; }
+        .card-trend { font-size: 11px; color: #10b981; margin-left: 8px; }
+
+        /* Middle Row */
+        .middle-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .chart-title { font-size: 15px; font-weight: 700; color: #1f2937; }
+        
+        /* Fake Line Chart CSS */
+        .fake-line-chart { height: 200px; position: relative; border-bottom: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; margin-left: 20px; margin-top: 10px; }
+        .y-axis { position: absolute; left: -30px; top: 0; height: 100%; display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #9ca3af; }
+        .x-axis { position: absolute; bottom: -20px; width: 100%; display: flex; justify-content: space-between; font-size: 10px; color: #9ca3af; }
+        .line-blue { position: absolute; width: 100%; height: 100%; background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,70 Q10,50 20,60 T40,40 T60,50 T80,30 T100,20" fill="none" stroke="%234f46e5" stroke-width="2"/><path d="M0,70 Q10,50 20,60 T40,40 T60,50 T80,30 T100,20 L100,100 L0,100 Z" fill="rgba(79, 70, 229, 0.1)"/></svg>') no-repeat; background-size: 100% 100%; }
+        .line-orange { position: absolute; width: 100%; height: 100%; background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,90 Q15,80 25,85 T45,70 T65,75 T85,60 T100,65" fill="none" stroke="%23fb923c" stroke-width="2"/><path d="M0,90 Q15,80 25,85 T45,70 T65,75 T85,60 T100,65 L100,100 L0,100 Z" fill="rgba(251, 146, 60, 0.1)"/></svg>') no-repeat; background-size: 100% 100%; }
+        
+        /* Heatmap */
+        .heatmap-container { display: flex; margin-top: 10px; }
+        .heatmap-y { display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #9ca3af; padding-right: 10px; height: 160px; }
+        .heatmap-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: 1; height: 160px; }
+        .heat-box { border-radius: 4px; }
+        .heat-1 { background: #f3e8ff; }
+        .heat-2 { background: #e9d5ff; }
+        .heat-3 { background: #d8b4fe; }
+        .heat-4 { background: #c084fc; }
+        .heat-5 { background: #6b46c1; }
+        .heatmap-x { display: flex; justify-content: space-between; font-size: 10px; color: #6b7280; margin-top: 10px; padding-left: 35px; }
+
+        /* Bottom Row */
+        .bottom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; margin-top: 15px; }
+        th { padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; color: #9ca3af; font-weight: 500; font-size: 11px; text-transform: uppercase; }
+        td { padding: 12px 0; border-bottom: 1px solid #f9fafb; color: #4b5563; }
+        .status-active { background: #ecfdf5; color: #10b981; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        
+        /* Fake Doughnut Chart */
+        .doughnut-wrapper { position: relative; width: 150px; height: 150px; margin: 20px auto; border-radius: 50%; background: conic-gradient(#6b46c1 0% 64%, #fb923c 64% 89%, #4ade80 89% 100%); display: flex; align-items: center; justify-content: center; }
+        .doughnut-inner { width: 110px; height: 110px; background: white; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .doughnut-inner h4 { font-size: 22px; margin: 0; color: #111827; }
+        .doughnut-inner p { font-size: 10px; color: #9ca3af; margin: 0; }
+        .legend { margin-top: 20px; font-size: 12px; }
+        .legend-item { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .legend-label { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot-purple { background: #6b46c1; }
+        .dot-orange { background: #fb923c; }
+        .dot-green { background: #4ade80; }
+        .legend-value { color: #9ca3af; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div>
+            <div class="logo-area">
+                <div class="logo-icon">N</div>
+                <div class="logo-text">
+                    <h1>Nosense Studio</h1>
+                    <p>hello@nosensestudio</p>
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" placeholder="Search">
+            </div>
+            <ul class="nav-menu">
+                <li class="active">Dashboard</li>
+                <li>Employee Directory</li>
+                <li>Attendance</li>
+                <li>Employee Performance</li>
+                <li>Leave Management</li>
+                <li>Payroll</li>
+                <li>Recruitment</li>
+                <li>Onboarding</li>
+                <li>Development</li>
+            </ul>
+        </div>
+        <ul class="bottom-menu">
+            <li>Help Center</li>
+            <li>Settings</li>
+            <li class="signout">Sign Out</li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <div class="breadcrumb">Dashboard / <span>Overview</span></div>
+            <div class="topbar-actions">
+                <button class="btn btn-outline">+ Invite People</button>
+                <button class="btn btn-primary">Generate Plan</button>
+            </div>
+        </header>
+
+        <div class="dashboard-scroll">
+            <!-- Header -->
+            <div class="page-header">
+                <div>
+                    <h2>HR Insight Dashboard</h2>
+                    <p>Smart HR insights that drive better decisions</p>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-outline">Export Data</button>
+                    <button class="btn btn-primary">+ New Entry</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="card">
+                    <div class="card-header"><span>Total Employee</span><span>...</span></div>
+                    <div class="card-value">272 <span class="card-trend">+6% last month</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>New Employee</span><span>...</span></div>
+                    <div class="card-value">72 <span class="card-trend">+4% last month</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>Resign Employee</span><span>...</span></div>
+                    <div class="card-value">16 <span class="card-trend">+2% last month</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span>Job Applicants</span><span>...</span></div>
+                    <div class="card-value">329 <span class="card-trend">+8% last month</span></div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="middle-grid">
+                <div class="card">
+                    <div class="chart-header">
+                        <div class="chart-title">Team Performance</div>
+                    </div>
+                    <div class="fake-line-chart">
+                        <div class="y-axis"><span>50K</span><span>40K</span><span>30K</span><span>20K</span><span>10K</span></div>
+                        <div class="line-blue"></div>
+                        <div class="line-orange"></div>
+                        <div class="x-axis"><span>Jan</span><span>Mar</span><span>May</span><span>Jul</span><span>Sep</span><span>Nov</span><span>Dec</span></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="chart-header">
+                        <div class="chart-title">Attendance Report</div>
+                        <div>...</div>
+                    </div>
+                    <div class="heatmap-container">
+                        <div class="heatmap-y"><span>11:00</span><span>10:30</span><span>10:00</span><span>09:30</span><span>09:00</span><span>08:30</span></div>
+                        <div class="heatmap-grid">
+                            <div class="heat-box heat-1"></div><div class="heat-box heat-1"></div><div class="heat-box heat-1"></div><div class="heat-box heat-1"></div><div class="heat-box heat-1"></div>
+                            <div class="heat-box heat-2"></div><div class="heat-box heat-2"></div><div class="heat-box heat-2"></div><div class="heat-box heat-2"></div><div class="heat-box heat-2"></div>
+                            <div class="heat-box heat-3"></div><div class="heat-box heat-3"></div><div class="heat-box heat-3"></div><div class="heat-box heat-3"></div><div class="heat-box heat-3"></div>
+                            <div class="heat-box heat-4"></div><div class="heat-box heat-4"></div><div class="heat-box heat-4"></div><div class="heat-box heat-4"></div><div class="heat-box heat-4"></div>
+                            <div class="heat-box heat-5"></div><div class="heat-box heat-5"></div><div class="heat-box heat-5"></div><div class="heat-box heat-5"></div><div class="heat-box heat-5"></div>
+                            <div class="heat-box heat-5"></div><div class="heat-box heat-5"></div><div class="heat-box heat-5"></div><div class="heat-box heat-5"></div><div class="heat-box heat-5"></div>
+                        </div>
+                    </div>
+                    <div class="heatmap-x"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span></div>
+                </div>
+            </div>
+
+            <!-- Bottom -->
+            <div class="bottom-grid">
+                <div class="card">
+                    <div class="chart-header"><div class="chart-title">Employees</div><div>...</div></div>
+                    <table>
+                        <tr><th>Emp ID</th><th>Full Name</th><th>Email</th><th>Role</th><th>Dept</th><th>Status</th></tr>
+                        <tr><td>#FRO1890</td><td>Cooper Herwitz</td><td>cooper@mail.com</td><td>Jr. Developer</td><td>IT</td><td><span class="status-active">Active</span></td></tr>
+                        <tr><td>#FRO1728</td><td>Kierra Gouse</td><td>kierra@mail.com</td><td>UI Designer</td><td>Creative</td><td><span class="status-active">Active</span></td></tr>
+                        <tr><td>#FRO1653</td><td>Cheyenne Franci</td><td>cheyenne@mail.com</td><td>Development</td><td>HR</td><td><span class="status-active">Active</span></td></tr>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="chart-header"><div class="chart-title">Jobs Overview</div><div>...</div></div>
+                    <div class="doughnut-wrapper">
+                        <div class="doughnut-inner">
+                            <h4>72</h4>
+                            <p>Total Jobs</p>
+                        </div>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-label"><span class="dot dot-purple"></span>46</div><span class="legend-value">Active Jobs</span></div>
+                        <div class="legend-item"><div class="legend-label"><span class="dot dot-orange"></span>18</div><span class="legend-value">In Reviews</span></div>
+                        <div class="legend-item"><div class="legend-label"><span class="dot dot-green"></span>8</div><span class="legend-value">Finish Jobs</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
